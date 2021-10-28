@@ -24,11 +24,10 @@ SELECT
     CURRENT_TIMESTAMP - INTERVAL FLOOR(RAND() * 365 * 24 * 60 *60) SECOND as date_inserted
 FROM 
     -- this is just a cheesy way to do a cartesian product - yes on purpose 
-    -- creates 262,144 rows of imaginary customer_blink events 
+    -- creates 65,536 rows of imaginary customer_blink events 
     -- can run this over sproc over and over again if you want more data 
 	customer a join
-    region b join 
-    region c 
+    region b 
     ;
 
 END;
