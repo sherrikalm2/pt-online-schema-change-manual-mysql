@@ -1,12 +1,12 @@
-DROP PROCEDURE IF EXISTS schema_change.backfiller_customer_blink;
+DROP PROCEDURE IF EXISTS schema_change.backfiller;
 
 DELIMITER |
 
-CREATE PROCEDURE schema_change.backfiller_customer_blink (
-v_start INTEGER,
-v_stop INTEGER, 
+CREATE PROCEDURE schema_change.backfiller (
+v_start_id INTEGER,
+v_stop_id INTEGER, 
 v_chunk_size INTEGER,
-v_sleep DECIMEL 
+v_sleep FLOAT
 )
 SQL SECURITY INVOKER
 NOT DETERMINISTIC 
@@ -26,25 +26,24 @@ BEGIN
 -- v_sleep is the number of seconds to wait between ba
 --
 -- SAMPLE Usage: back fill the first 1000 
--- CALL schema_change.backfiller_customer_blink( 1, 1000, 10000, 0.5);
+-- CALL schema_change.backfiller( 1, 1000, 100, 0.1); -- for testing 
 -- 
-
-DECLARE v_source_id BIGINT DEFAULT v_start;
-
--- for monitoring in flight 
-CREATE IF NOT EXISTS TABLE schema_change.customer_blink_log (i BIGINT, logtime DATETIME(6) NOT NULL DEFAULT NOW(6),  
-KEY(i), KEY(logtime)
-);
-
+-- to get the value of v_stop - 
+-- SELECT MIN(customer_blink_id) FROM schema_change.customer_blink_target
+-- CALL schema_change.backfiller( 1, 1000, 100, 0.1);
+-- 
 -- to watch while it is running 
 -- select * from schema_change.customer_blink_log order by logtime desc;
+
+DECLARE v_chunk_start_id BIGINT DEFAULT v_start_id;
+DECLARE v_chunk_end_id BIGINT DEFAULT v_chunk_start_id + (v_chunk_size -1) ;
 
 -- ---------------------------
 -- Loop over each id 
 -- this is not the most efficient way but is less likely to cause contention in a very busy table 
 -- ---------------------------
 
-	WHILE v_source_id < v_stop DO
+	WHILE v_chunk_start_id < v_stop_id DO
     
 	BEGIN
 		
@@ -53,8 +52,9 @@ KEY(i), KEY(logtime)
 		-- Log where we are 
 		-- ---------------------------
 
-		INSERT INTO schema_change.customer_blink_log  (i) VALUES (v_source_id); 
-        
+		INSERT INTO schema_change.customer_blink_log  (i, chunk_start_id, chunk_end_id ) 
+        VALUES (v_start_id, v_chunk_start_id, v_chunk_end_id); 
+
         -- ---------------------------
         -- fill up the staging table 
         -- ---------------------------
@@ -82,8 +82,7 @@ KEY(i), KEY(logtime)
         FROM 
             production.customer_blink
         WHERE 
-            customer_blink_id = v_source_id 
-        LOCK IN SHARE MODE
+            customer_blink_id BETWEEN v_chunk_start_id AND v_chunk_end_id
         ;
         
         COMMIT; -- ends the transaction
@@ -91,8 +90,11 @@ KEY(i), KEY(logtime)
         SELECT SLEEP(v_sleep);
 			
 	END;
+        -- increment our incrementors 
+		SET v_start_id = v_start_id + 1; 
 
-		SET v_source_id = v_source_id + 1; 
+        SET v_chunk_start_id = v_chunk_end_id + 1 ; 
+        SET v_chunk_end_id = v_chunk_end_id + (v_chunk_size) ;
     
 	END WHILE;
 
