@@ -2,12 +2,12 @@
 -- ----------------------------------------------------- 
 -- INSERT TRIGGER 
 -- ----------------------------------------------------- 
-DROP TRIGGER IF EXISTS tr_production_customer_blink_insert_a;
+DROP TRIGGER IF EXISTS production.tr_production_customer_blink_insert_a;
 
 DELIMITER | 
 
 CREATE 
-TRIGGER tr_production_customer_blink_insert_a
+TRIGGER production.tr_production_customer_blink_insert_a
 AFTER INSERT ON production.customer_blink
 
 FOR EACH ROW  
@@ -38,12 +38,12 @@ DELIMITER ;
 -- ----------------------------------------------------- 
 -- UPDATE TRIGGER 
 -- ----------------------------------------------------- 
-DROP TRIGGER IF EXISTS tr_production_customer_blink_update_a;
+DROP TRIGGER IF EXISTS production.tr_production_customer_blink_update_a;
 
 DELIMITER | 
 
 CREATE 
-TRIGGER tr_production_customer_blink_update_a
+TRIGGER production.tr_production_customer_blink_update_a
 AFTER UPDATE ON production.customer_blink
 
 FOR EACH ROW  
@@ -73,12 +73,12 @@ DELIMITER ;
 -- ----------------------------------------------------- 
 -- DELETE TRIGGER  - ok I don't condone hard deletes, but if you really must.. 
 -- ----------------------------------------------------- 
-DROP TRIGGER IF EXISTS tr_production_customer_blink_delete_a;
+DROP TRIGGER IF EXISTS production.tr_production_customer_blink_delete_a;
 
 DELIMITER | 
 
 CREATE 
-TRIGGER tr_production_customer_blink_delete_a
+TRIGGER production.tr_production_customer_blink_delete_a
 AFTER DELETE ON production.customer_blink
 
 FOR EACH ROW  
