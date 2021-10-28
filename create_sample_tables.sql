@@ -104,3 +104,12 @@ Which, btw,  is about 14,400 - 19,200 times a day for the average person. '
 ALTER TABLE production.customer_blink CONVERT TO CHARACTER SET utf8 COLLATE utf8_unicode_ci ;
 
 
+-- for monitoring in flight 
+CREATE TABLE IF NOT EXISTS schema_change.customer_blink_log (
+    i BIGINT, 
+    logtime DATETIME(6) NOT NULL DEFAULT NOW(6),  
+    chunk_start_id BIGINT, 
+    chunk_end_id BIGINT,
+    KEY(i), 
+    KEY(logtime)
+);
